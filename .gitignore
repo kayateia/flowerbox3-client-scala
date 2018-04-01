@@ -1,0 +1,13 @@
+RUNNING_PID
+logs/
+project/*-shim.sbt
+project/project/
+project/target/
+target/
+lib/
+.sbtserver/
+project/.sbtserver
+project/.sbtserver.lock
+project/sbt-ui.sbt
+.idea
+
