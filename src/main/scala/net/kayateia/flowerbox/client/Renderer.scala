@@ -2,56 +2,15 @@ package net.kayateia.flowerbox.client
 
 import org.lwjgl.opengl.GL11._
 
-import scala.collection.mutable.ArrayBuffer
-
 object Renderer {
+	private val chunks = new Array[Chunk](9)
+
 	def setup() {
-		genLand()
-	}
-
-	private val cubeMap = new Array[Int](16*16*16)
-	private def coord(x: Int, y: Int, z: Int) = z*16*16 + y*16 + x
-
-	private def genLand() {
-		for (x <- 0 to 15; z <- 0 to 15) {
-			val height = Math.floor(Math.random() * 15).asInstanceOf[Int]
-			for (y <- 0 to height)
-				cubeMap(coord(x, y, z)) = 1
+		// chunk.setup()
+		for (x <- 0 to 2; z <- 0 to 2) {
+			chunks(x * 3 + z) = new Chunk
+			chunks(x * 3 + z).setup()
 		}
-		genDL()
-	}
-
-	case class Coord(x: Int, y: Int, z: Int,
-			top: Boolean = true, left: Boolean = true, right: Boolean = true, bottom: Boolean = true,
-			front: Boolean = true, back: Boolean = true) {
-		def isEmpty = !top && !left && !right && !bottom && !front && !back
-	}
-
-	private val displayList = ArrayBuffer[Coord]()
-
-	private def genDL() {
-		for (x <- 0 to 15; y <- 0 to 15; z <- 0 to 15) {
-			def isFilled(x: Int, y: Int, z: Int) = cubeMap(coord(x, y, z)) > 0
-			if (isFilled(x, y, z)) {
-				def onEdge(c: Int) = c == 0 || c == 15
-				def isEdgeBlock(x: Int, y: Int, z: Int) = onEdge(x) || onEdge(y) || onEdge(z)
-				if (isEdgeBlock(x, y, z)) {
-					displayList += Coord(x, y, z)
-				} else {
-					val coord = Coord(x, y, z,
-						!isFilled(x, y + 1, z),
-						!isFilled(x - 1, y, z),
-						!isFilled(x + 1, y, z),
-						!isFilled(x, y - 1, z),
-						!isFilled(x, y, z - 1),
-						!isFilled(x, y, z + 1)
-					)
-					if (!coord.isEmpty)
-						displayList += coord
-				}
-			}
-		}
-		println(displayList.length, displayList)
 	}
 
 	private val PI = 3.14159265358979323846
@@ -95,57 +54,6 @@ object Renderer {
 
 	private var rot = 0.0f;
 
-	def oneCube(xcen: Float, ycen: Float, zcen: Float, coord: Coord) {
-		def alpha = 0.5f
-		glPushMatrix()
-		glTranslatef(xcen, ycen, zcen)
-		glBegin(GL_QUADS)
-		if (coord.top) {
-			glColor4f(1.0f,1.0f,0.0f, alpha)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-		}
-		if (coord.bottom) {
-			glColor4f(1.0f,0.5f,0.0f, alpha)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-		}
-		if (coord.back) {
-			glColor4f(1.0f,0.0f,0.0f, alpha)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-		}
-		if (coord.front) {
-			glColor4f(1.0f,1.0f,0.0f, alpha)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-		}
-		if (coord.left) {
-			glColor4f(0.0f,0.0f,1.0f, alpha)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-		}
-		if (coord.right) {
-			glColor4f(1.0f,0.0f,1.0f, alpha)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-		}
-		glEnd()
-		glPopMatrix()
-	}
-
 	def render(width: Int, height: Int) {
 		glViewport(0, 0, width, height)
 		glClearColor(0f, 0f, 0.2f, 0f)
@@ -155,8 +63,8 @@ object Renderer {
 		glDepthFunc(GL_LESS)
 		glShadeModel(GL_SMOOTH)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
-		glEnable(GL_BLEND)
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+		//glEnable(GL_BLEND)
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 		setupProjectionMatrix(width, height)
 
@@ -173,8 +81,7 @@ object Renderer {
 			if (cubeMap(z*256 + y*16 + x) > 0)
 				oneCube((x - 8).asInstanceOf[Float], (y - 8).asInstanceOf[Float], (z - 8).asInstanceOf[Float])
 		} */
-		for (c <- displayList) {
-			oneCube((c.x - 8).asInstanceOf[Float], (c.y - 8).asInstanceOf[Float], (c.z - 8).asInstanceOf[Float], c)
-		}
+		for (x <- 0 to 2; z <- 0 to 2)
+			chunks(x*3 + z).render(-16f + 16f*x, -16f + 16f*z)
 	}
 }

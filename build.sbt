@@ -85,6 +85,10 @@ libraryDependencies ++= Seq(
 	"org.lwjgl"      % "lwjgl-platform" % lwjglVersion % "natives" classifier "natives-osx"
 )
 
+libraryDependencies ++= Seq(
+	"com.flowpowered" % "flow-noise" % "1.0.0"
+)
+
 nativeExtractions <<= (baseDirectory) { base => Seq (
 	("lwjgl-platform-3.0.0-natives-linux.jar",   AllPassFilter, base / "lib/linux"),
 	("lwjgl-platform-3.0.0-natives-windows.jar", AllPassFilter, base / "lib/windows"),
