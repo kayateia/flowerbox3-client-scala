@@ -26,7 +26,7 @@ import org.lwjgl.system.MemoryUtil._
 
 object Main extends App {
 	import CallbackHelpers._
-	import Renderer.render
+	import Renderer.{render, setup}
 
 	private val WIDTH  = 800
 	private val HEIGHT = 600
@@ -71,6 +71,8 @@ object Main extends App {
 		glfwMakeContextCurrent(window)
 		glfwSwapInterval(1)
 		glfwShowWindow(window)
+
+		setup()
 
 		window
 	}
