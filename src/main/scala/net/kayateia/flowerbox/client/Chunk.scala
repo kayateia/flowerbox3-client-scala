@@ -5,7 +5,12 @@ import org.lwjgl.opengl.GL11._
 
 import scala.collection.mutable.ArrayBuffer
 
-class Chunk {
+object Chunk {
+	val xSize = 0.25f
+	val zSize = 0.25f
+}
+
+class Chunk(val globalX: Float, val globalZ: Float) {
 	def setup() {
 		genLand()
 	}
@@ -14,17 +19,16 @@ class Chunk {
 	private def coord(x: Int, y: Int, z: Int) = z*16*16 + y*16 + x
 
 	private def genLand() {
-		val xMin = 2f
-		val xMax = 6f
-		val xSize = xMax - xMin
-		val zMin = 1f
-		val zMax = 5f
-		val zSize = xMax - zMin
+		val xMin = globalX * Chunk.xSize
+		val zMin = globalZ * Chunk.zSize
 		val perlin = new Perlin()
+		perlin.setOctaveCount(3)
+		perlin.setPersistence(0.3)
+
 		for (x <- 0 until 16; z <- 0 until 16) {
 			// val height = Math.floor(Math.random() * 15).asInstanceOf[Int]
-			val height = Math.floor(13f * perlin.getValue(xMin + xSize*(x / 16f), 0, zMin + zSize*(z / 16f))).asInstanceOf[Int]
-			val heightMinMaxed = Math.max(Math.min(height, 13), 2)
+			val height = Math.floor(13f * perlin.getValue(xMin + Chunk.xSize*(x / 16f), 0, zMin + Chunk.zSize*(z / 16f))).asInstanceOf[Int]
+			val heightMinMaxed = Math.max(Math.min(height, 13), 1)
 			for (y <- 0 until heightMinMaxed)
 				cubeMap(coord(x, y, z)) = 2
 			cubeMap(coord(x, heightMinMaxed, z)) = 1

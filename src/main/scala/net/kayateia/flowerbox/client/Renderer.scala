@@ -8,7 +8,7 @@ object Renderer {
 	def setup() {
 		// chunk.setup()
 		for (x <- 0 to 2; z <- 0 to 2) {
-			chunks(x * 3 + z) = new Chunk
+			chunks(x * 3 + z) = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
 			chunks(x * 3 + z).setup()
 		}
 	}
