@@ -23,8 +23,8 @@ class Chunk {
 		val perlin = new Perlin()
 		for (x <- 0 to 15; z <- 0 to 15) {
 			// val height = Math.floor(Math.random() * 15).asInstanceOf[Int]
-			val height = Math.floor(perlin.getValue(xMin + xSize*(x / 16f), 0, zMin + zSize*(z / 16f))).asInstanceOf[Int]
-			val heightMaxed = 5 + (if (height > 15) 15 else height)
+			val height = Math.floor(8f * perlin.getValue(xMin + xSize*(x / 16f), 0, zMin + zSize*(z / 16f))).asInstanceOf[Int]
+			val heightMaxed = 2 + (if (height > 14) 14 else height)
 			for (y <- 0 to heightMaxed)
 				cubeMap(coord(x, y, z)) = 1
 		}
@@ -65,53 +65,100 @@ class Chunk {
 	}
 
 	private def oneCube(xcen: Float, ycen: Float, zcen: Float, coord: Coord) {
-		def alpha = 0.5f
+		glEnable(GL_TEXTURE_2D)
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+
+		// def alpha = 0.5f
 		glPushMatrix()
 		glTranslatef(xcen, ycen, zcen)
-		glBegin(GL_QUADS)
+		glScalef(0.5f,0.5f,0.5f)
+		glColor4f(1f, 1f, 1f, 1f)
+		//glBegin(GL_QUADS)
 		if (coord.top) {
-			glColor4f(1.0f,1.0f,0.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.grassTop)
+			glBegin(GL_QUADS)
+			// glColor4f(1.0f,1.0f,0.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f( 1.0f, 1.0f,-1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f(-1.0f, 1.0f,-1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f(-1.0f, 1.0f, 1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f( 1.0f, 1.0f, 1.0f)
+			glEnd()
 		}
 		if (coord.bottom) {
-			glColor4f(1.0f,0.5f,0.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.dirt)
+			glBegin(GL_QUADS)
+			// glColor4f(1.0f,0.5f,0.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f( 1.0f,-1.0f, 1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f(-1.0f,-1.0f, 1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f(-1.0f,-1.0f,-1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f( 1.0f,-1.0f,-1.0f)
+			glEnd()
 		}
 		if (coord.back) {
-			glColor4f(1.0f,0.0f,0.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
+			glBegin(GL_QUADS)
+			// glColor4f(1.0f,0.0f,0.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f( 1.0f, 1.0f, 1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f(-1.0f, 1.0f, 1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f(-1.0f,-1.0f, 1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f( 1.0f,-1.0f, 1.0f)
+			glEnd()
 		}
 		if (coord.front) {
-			glColor4f(1.0f,1.0f,0.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
+			glBegin(GL_QUADS)
+			// glColor4f(1.0f,1.0f,0.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f( 1.0f,-1.0f,-1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f(-1.0f,-1.0f,-1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f(-1.0f, 1.0f,-1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f( 1.0f, 1.0f,-1.0f)
+			glEnd()
 		}
 		if (coord.left) {
-			glColor4f(0.0f,0.0f,1.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
+			glBegin(GL_QUADS)
+			// glColor4f(0.0f,0.0f,1.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f(-1.0f, 1.0f, 1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f(-1.0f, 1.0f,-1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f(-1.0f,-1.0f,-1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f(-1.0f,-1.0f, 1.0f)
+			glEnd()
 		}
 		if (coord.right) {
-			glColor4f(1.0f,0.0f,1.0f, alpha)
+			glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
+			glBegin(GL_QUADS)
+			// glColor4f(1.0f,0.0f,1.0f, alpha)
+			glTexCoord2f(1f, 0f)
 			glVertex3f( 1.0f, 1.0f,-1.0f)
+			glTexCoord2f(0f, 0f)
 			glVertex3f( 1.0f, 1.0f, 1.0f)
+			glTexCoord2f(0f, 1f)
 			glVertex3f( 1.0f,-1.0f, 1.0f)
+			glTexCoord2f(1f, 1f)
 			glVertex3f( 1.0f,-1.0f,-1.0f)
+			glEnd()
 		}
-		glEnd()
+		// glEnd()
 		glPopMatrix()
 	}
 

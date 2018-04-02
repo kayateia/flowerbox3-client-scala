@@ -55,8 +55,10 @@ object Renderer {
 	private var rot = 0.0f;
 
 	def render(width: Int, height: Int) {
+		Textures.loadAll()
+
 		glViewport(0, 0, width, height)
-		glClearColor(0f, 0f, 0.2f, 0f)
+		glClearColor(133f / 255f, 225f / 255f, 1f, 0f)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		glEnable(GL_DEPTH_TEST)
@@ -71,7 +73,7 @@ object Renderer {
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
 
-		glTranslatef(0f, -10.0f, -40f)
+		glTranslatef(0f, -5.0f, -40f)
 		glRotatef(rot, 0.0f, 1.0f, 0.0f)
 		glColor3f(0.5f, 0.5f, 1.0f)
 
