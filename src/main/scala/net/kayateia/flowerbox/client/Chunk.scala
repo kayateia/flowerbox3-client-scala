@@ -1,7 +1,12 @@
 package net.kayateia.flowerbox.client
 
 import com.flowpowered.noise.module.source.Perlin
+import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL20._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -15,10 +20,16 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		genLand()
 	}
 
-	private val cubeMap = new Array[Int](16*16*16)
+	lazy val displayList = genDL(genLand())
+	lazy val buffers = genBuffers(displayList)
+
+	// Convert from x,y,z to cubeMap index.
 	private def coord(x: Int, y: Int, z: Int) = z*16*16 + y*16 + x
 
-	private def genLand() {
+	// Generates the cube map.
+	private def genLand(): Array[Int] = {
+		val cubeMap = new Array[Int](16*16*16)
+
 		val xMin = globalX * Chunk.xSize
 		val zMin = globalZ * Chunk.zSize
 		val perlin = new Perlin()
@@ -33,18 +44,154 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 				cubeMap(coord(x, y, z)) = 2
 			cubeMap(coord(x, heightMinMaxed, z)) = 1
 		}
-		genDL()
+
+		cubeMap
 	}
 
+	// Represents one voxel derived from the cube map.
 	case class Voxel(x: Int, y: Int, z: Int, blockType: Int,
 					 top: Boolean = true, left: Boolean = true, right: Boolean = true, bottom: Boolean = true,
 					 front: Boolean = true, back: Boolean = true) {
 		def isEmpty = !top && !left && !right && !bottom && !front && !back
+
+		def size = 0.5f
+
+		// Each vertex will take 5 floats in the array.
+		def toBuffer(dataArray: ArrayBuffer[Float], elementArray: ArrayBuffer[Int], textureArray: ArrayBuffer[Int]) {
+			if (top) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x+size, y+size, z-size,
+					1f, 0f,
+					x-size, y+size, z-size,
+					0f, 0f,
+					x-size, y+size, z+size,
+					0f, 1f,
+					x+size, y+size, z+size,
+					1f, 1f
+				)
+				textureArray += {
+					blockType match {
+						case 1 => Textures.grassTop
+						case 2 => Textures.dirt
+					}
+				}
+			}
+			if (bottom) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x+size, y-size, z+size,
+					1f, 0f,
+					x-size, y-size, z+size,
+					0f, 0f,
+					x-size, y-size, z-size,
+					0f, 1f,
+					x+size, y-size, z-size,
+					1f, 1f
+				)
+				textureArray += Textures.dirt
+			}
+			if (back) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x+size, y+size, z+size,
+					1f, 0f,
+					x-size, y+size, z+size,
+					0f, 0f,
+					x-size, y-size, z+size,
+					0f, 1f,
+					x+size, y-size, z+size,
+					1f, 1f
+				)
+				textureArray += {
+					blockType match {
+						case 1 => Textures.grassSide
+						case 2 => Textures.dirt
+					}
+				}
+			}
+			if (front) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x+size, y-size, z-size,
+					1f, 1f,
+					x-size, y-size, z-size,
+					0f, 1f,
+					x-size, y+size, z-size,
+					0f, 0f,
+					x+size, y+size, z-size,
+					1f, 0f
+				)
+				textureArray += {
+					blockType match {
+						case 1 => Textures.grassSide
+						case 2 => Textures.dirt
+					}
+				}
+			}
+			if (left) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x-size, y+size, z+size,
+					1f, 0f,
+					x-size, y+size, z-size,
+					0f, 0f,
+					x-size, y-size, z-size,
+					0f, 1f,
+					x-size, y-size, z+size,
+					1f, 1f
+				)
+				textureArray += {
+					blockType match {
+						case 1 => Textures.grassSide
+						case 2 => Textures.dirt
+					}
+				}
+			}
+			if (right) {
+				val base = dataArray.length / 5
+				elementArray ++= List (
+					base+0, base+1, base+2, base+2, base+3, base+0
+				)
+				dataArray ++= List (
+					x+size, y+size, z-size,
+					1f, 0f,
+					x+size, y+size, z+size,
+					0f, 0f,
+					x+size, y-size, z+size,
+					0f, 1f,
+					x-size, y-size, z-size,
+					1f, 1f
+				)
+				textureArray += {
+					blockType match {
+						case 1 => Textures.grassSide
+						case 2 => Textures.dirt
+					}
+				}
+			}
+		}
 	}
 
-	private val displayList = ArrayBuffer[Voxel]()
+	// Converts the cube map into a display list of voxels. Optimizes away as many as possible.
+	private def genDL(cubeMap: Array[Int]): ArrayBuffer[Voxel] = {
+		val displayList = ArrayBuffer[Voxel]()
 
-	private def genDL() {
 		for (x <- 0 until 16; y <- 0 until 16; z <- 0 until 16) {
 			def isFilled(x: Int, y: Int, z: Int) = cubeMap(coord(x, y, z)) > 0
 			if (isFilled(x, y, z)) {
@@ -67,124 +214,88 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 				}
 			}
 		}
+
+		displayList
 	}
 
-	private def oneCube(xcen: Float, ycen: Float, zcen: Float, voxel: Voxel) {
-		glEnable(GL_TEXTURE_2D)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+	case class Buffers(vertsAndSt: ArrayBuffer[Float], elems: ArrayBuffer[Int], txrs: ArrayBuffer[Int])
 
-		// def alpha = 0.5f
-		glPushMatrix()
-		glTranslatef(xcen, ycen, zcen)
-		glScalef(0.5f,0.5f,0.5f)
-		glColor4f(1f, 1f, 1f, 1f)
-		//glBegin(GL_QUADS)
-		if (voxel.top) {
-			voxel.blockType match {
-				case 1 => glBindTexture(GL_TEXTURE_2D, Textures.grassTop)
-				case 2 => glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			}
-			glBegin(GL_QUADS)
-			// glColor4f(1.0f,1.0f,0.0f, alpha)
-			glTexCoord2f(1f, 0f)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glTexCoord2f(1f, 1f)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-			glEnd()
+	private def genBuffers(voxels: ArrayBuffer[Voxel]): Buffers = {
+		val vas = new ArrayBuffer[Float]
+		val es = new ArrayBuffer[Int]
+		val ts = new ArrayBuffer[Int]
+		for (v <- voxels) {
+			v.toBuffer(vas, es, ts)
 		}
-		if (voxel.bottom) {
-			glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			glBegin(GL_QUADS)
-			// glColor4f(1.0f,0.5f,0.0f, alpha)
-			glTexCoord2f(1f, 0f)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glTexCoord2f(1f, 1f)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-			glEnd()
-		}
-		if (voxel.back) {
-			voxel.blockType match {
-				case 1 => glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
-				case 2 => glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			}
-			glBegin(GL_QUADS)
-			// glColor4f(1.0f,0.0f,0.0f, alpha)
-			glTexCoord2f(1f, 0f)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-			glTexCoord2f(1f, 1f)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-			glEnd()
-		}
-		if (voxel.front) {
-			voxel.blockType match {
-				case 1 => glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
-				case 2 => glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			}
-			glBegin(GL_QUADS)
-			// glColor4f(1.0f,1.0f,0.0f, alpha)
-			glTexCoord2f(1f, 1f)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glTexCoord2f(1f, 0f)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-			glEnd()
-		}
-		if (voxel.left) {
-			voxel.blockType match {
-				case 1 => glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
-				case 2 => glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			}
-			glBegin(GL_QUADS)
-			// glColor4f(0.0f,0.0f,1.0f, alpha)
-			glTexCoord2f(1f, 0f)
-			glVertex3f(-1.0f, 1.0f, 1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f(-1.0f, 1.0f,-1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f(-1.0f,-1.0f,-1.0f)
-			glTexCoord2f(1f, 1f)
-			glVertex3f(-1.0f,-1.0f, 1.0f)
-			glEnd()
-		}
-		if (voxel.right) {
-			voxel.blockType match {
-				case 1 => glBindTexture(GL_TEXTURE_2D, Textures.grassSide)
-				case 2 => glBindTexture(GL_TEXTURE_2D, Textures.dirt)
-			}
-			glBegin(GL_QUADS)
-			// glColor4f(1.0f,0.0f,1.0f, alpha)
-			glTexCoord2f(1f, 0f)
-			glVertex3f( 1.0f, 1.0f,-1.0f)
-			glTexCoord2f(0f, 0f)
-			glVertex3f( 1.0f, 1.0f, 1.0f)
-			glTexCoord2f(0f, 1f)
-			glVertex3f( 1.0f,-1.0f, 1.0f)
-			glTexCoord2f(1f, 1f)
-			glVertex3f( 1.0f,-1.0f,-1.0f)
-			glEnd()
-		}
-		// glEnd()
-		glPopMatrix()
+
+		Buffers(vas, es, ts)
 	}
 
-	def render(xOffset: Float, zOffset: Float) {
-		for (c <- displayList) {
-			oneCube(xOffset + (c.x - 8).asInstanceOf[Float], (c.y - 8).asInstanceOf[Float], zOffset + (c.z - 8).asInstanceOf[Float], c)
-		}
+	var vaoId: Int = 0
+	var vboId: Int = 0
+	var vboiId: Int = 0
+
+	def createVertexArrays() {
+		val vertByteBuffer = BufferUtils.createByteBuffer(buffers.vertsAndSt.length * 4);
+		val vertFloatBuffer = vertByteBuffer.asFloatBuffer
+		vertFloatBuffer.put(buffers.vertsAndSt.toArray, 0, buffers.vertsAndSt.length)
+		vertFloatBuffer.flip()
+
+		val indexByteBuffer = BufferUtils.createByteBuffer(buffers.elems.length * 2)
+		val indexShortBuffer = indexByteBuffer.asShortBuffer
+		for (e <- buffers.elems)
+			indexShortBuffer.put(e.asInstanceOf[Short])
+		indexShortBuffer.flip()
+
+		vaoId = glGenVertexArrays()
+		glBindVertexArray(vaoId)
+
+		vboId = glGenBuffers()
+		glBindBuffer(GL_ARRAY_BUFFER, vboId)
+		glBufferData(GL_ARRAY_BUFFER, vertFloatBuffer, GL_STREAM_DRAW)
+
+		// Put the position coordinates in attribute list 0
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 5*4, 0)
+		// Put the color components in attribute list 1
+		//glVertexAttribPointer(1, VertexData.colorElementCount, GL_FLOAT, false, VertexData.stride, VertexData.colorByteOffset)
+		// Put the texture coordinates in attribute list 2
+		glVertexAttribPointer(1, 2, GL_FLOAT, false, 5*4, 3*4)
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0)
+		glBindVertexArray(0)
+
+		vboiId = glGenBuffers()
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboiId)
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexShortBuffer, GL_STATIC_DRAW)
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+	}
+
+	def render(pId: Int) {
+		glUseProgram(pId)
+
+		// Bind the texture
+		glActiveTexture(GL_TEXTURE0)
+		glBindTexture(GL_TEXTURE_2D, Textures.dirt)
+
+		// Bind to the VAO that has all the information about the vertices
+		glBindVertexArray(vaoId)
+		glEnableVertexAttribArray(0)
+		glEnableVertexAttribArray(1)
+		// GL20.glEnableVertexAttribArray(2);
+
+		// Bind to the index VBO that has all the information about the order of the vertices
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboiId)
+
+		// Draw the vertices
+		glDrawElements(GL_TRIANGLES, buffers.elems.length, GL_UNSIGNED_SHORT, 0)
+
+		// Put everything back to default (deselect)
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+		glDisableVertexAttribArray(0)
+		glDisableVertexAttribArray(1)
+		// GL20.glDisableVertexAttribArray(2);
+		glBindVertexArray(0)
+
+		glUseProgram(0)
 	}
 }

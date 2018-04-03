@@ -53,6 +53,10 @@ object Main extends App {
 		glfwDefaultWindowHints()
 		glfwWindowHint(GLFW_VISIBLE,   GLFW_FALSE) // hiding the window
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE) // window resizing not allowed
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
 
 		val window = glfwCreateWindow(WIDTH, HEIGHT, "Flowerbox Client", NULL, NULL)
 		if (window == NULL)
@@ -72,16 +76,16 @@ object Main extends App {
 		glfwSwapInterval(1)
 		glfwShowWindow(window)
 
-		setup()
-
 		window
 	}
 
 	private def loop(window: Long) {
 		GL.createCapabilities()
 
+		setup(WIDTH, HEIGHT)
+
 		while (!glfwWindowShouldClose(window)) {
-			render(WIDTH, HEIGHT)
+			render()
 			glfwSwapBuffers(window)
 			glfwPollEvents()
 		}
