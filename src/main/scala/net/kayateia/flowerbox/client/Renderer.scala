@@ -73,6 +73,8 @@ object Renderer {
 	var projectionMatrixLocation: Int = 0
 	var viewMatrixLocation: Int = 0
 	var modelMatrixLocation: Int = 0
+	var lightColorLocation: Int = 0
+	var lightPositionLocation: Int = 0
 
 	def setupShaders() {
 		// Create a new shader program that links both shaders
@@ -88,10 +90,10 @@ object Renderer {
 
 		// Position information will be attribute 0
 		glBindAttribLocation(pId, 0, "in_Position")
-		// Color information will be attribute 1
-		// glBindAttribLocation(pId, 1, "in_Color")
-		// Textute information will be attribute 2
-		glBindAttribLocation(pId, 1, "in_TextureCoord")
+		// Normal information will be attribute 1
+		glBindAttribLocation(pId, 1, "in_Normal")
+		// Texture information will be attribute 2
+		glBindAttribLocation(pId, 2, "in_TextureCoord")
 
 		glLinkProgram(pId)
 		val result = new Array[Int](1)
@@ -106,6 +108,16 @@ object Renderer {
 		projectionMatrixLocation = glGetUniformLocation(pId, "projectionMatrix")
 		viewMatrixLocation = glGetUniformLocation(pId, "viewMatrix")
 		modelMatrixLocation = glGetUniformLocation(pId, "modelMatrix")
+
+		// Get other parameter locations.
+		lightColorLocation = glGetUniformLocation(pId, "lightColor")
+		lightPositionLocation = glGetUniformLocation(pId, "lightPos")
+
+		// Set some default lighting.
+		glUseProgram(pId)
+		glUniform3f(lightColorLocation, 1f, 1f, 1f)
+		glUniform3f(lightPositionLocation, 15f, 15f, 15f)
+		glUseProgram(0)
 
 		// this.exitOnGLError("setupShaders");
 	}

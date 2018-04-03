@@ -44,7 +44,6 @@ class TextureAtlas(val eachTxrSize: Int) {
 				)).toArray
 
 		val stride = bigTxrSize * 4
-		println(poses)
 		for (fn <- queuedImages) {
 			val offset = poses.next()
 			println(fn, " at ", offset)

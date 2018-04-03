@@ -4,18 +4,22 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 
-in vec4 in_Position;
-in vec4 in_Color;
+in vec3 in_Position;
+in vec3 in_Normal;
 in vec2 in_TextureCoord;
 
-out vec4 pass_Color;
 out vec2 pass_TextureCoord;
+out vec3 pass_Normal;
+out vec3 FragPos;
 
 void main(void) {
-	// gl_Position = in_Position;
-	// Override gl_Position with our new calculated position
-	gl_Position = projectionMatrix * viewMatrix * modelMatrix * in_Position;
+	// Calculated for lighting later.
+	FragPos = vec3(modelMatrix * vec4(in_Position, 1.0));
 
-	pass_Color = in_Color;
+	// Override gl_Position with our new calculated position
+	gl_Position = projectionMatrix * viewMatrix * vec4(FragPos, 1.0);
+
+	// Pass this stuff on to the fragment shader.
 	pass_TextureCoord = in_TextureCoord;
+	pass_Normal = in_Normal;
 }
