@@ -22,9 +22,8 @@ object Renderer {
 		for (x <- 0 to 2; z <- 0 to 2) {
 			chunks(x * 3 + z) = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
 			chunks(x * 3 + z).setup()
+			chunks(x * 3 + z).createVertexArrays()
 		}
-
-		chunks(4).createVertexArrays()
 	}
 
 	private val PI = 3.14159265358979323846
@@ -53,25 +52,6 @@ object Renderer {
 		projectionMatrix.m32 = -((2 * near_plane * far_plane) / frustum_length)
 		projectionMatrix.m33 = 0
 	}
-
-	/*private def setupProjectionMatrix(width: Int, height: Int) {
-		// Setup projection matrix
-		val fieldOfView = 60f
-		val aspectRatio = width.asInstanceOf[Float] / height.asInstanceOf[Float]
-		val near_plane = 0.1f
-		val far_plane = 100f
-
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity()
-		def gluPerspective(fovy: Float, aspect: Float, near: Float, far: Float): Unit = {
-			val bottom = -near * Math.tan(fovy / 2).toFloat
-			val top = -bottom
-			val left = aspect * bottom
-			val right = -left
-			glFrustum(left, right, bottom, top, near, far)
-		}
-		gluPerspective(degreesToRadians(fieldOfView), aspectRatio, near_plane, far_plane)
-	} */
 
 	var pId: Int = 0
 	var projectionMatrixLocation: Int = 0
@@ -108,15 +88,17 @@ object Renderer {
 
 		// Get matrices uniform locations
 		projectionMatrixLocation = glGetUniformLocation(pId, "projectionMatrix")
-		var err = glGetError
 		viewMatrixLocation = glGetUniformLocation(pId, "viewMatrix")
-		err = glGetError
 		modelMatrixLocation = glGetUniformLocation(pId, "modelMatrix")
-		err = glGetError
 
 		// this.exitOnGLError("setupShaders");
 	}
 
+	private def loadModel() {
+		modelMatrix.store(matrix44buffer)
+		matrix44buffer.flip()
+		glUniformMatrix4fv(modelMatrixLocation, false, matrix44buffer)
+	}
 
 	private var rot = 0.0f;
 
@@ -127,14 +109,14 @@ object Renderer {
 
 		glEnable(GL_DEPTH_TEST)
 		glDepthFunc(GL_LESS)
-		//glShadeModel(GL_SMOOTH)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 		//glEnable(GL_BLEND)
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 		viewMatrix.setIdentity()
-		viewMatrix.translate(new Vector3f(0f, -5f, -40f))
+		viewMatrix.translate(new Vector3f(0f, -10f, -50f))
 		viewMatrix.rotate(degreesToRadians(rot), new Vector3f(0f, 1, 0f))
+		viewMatrix.translate(new Vector3f(-16f/2, 0f, -16f/2))
 
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
@@ -147,26 +129,19 @@ object Renderer {
 		viewMatrix.store(matrix44buffer)
 		matrix44buffer.flip()
 		glUniformMatrix4fv(viewMatrixLocation, false, matrix44buffer)
-		modelMatrix.store(matrix44buffer)
-		matrix44buffer.flip()
-		glUniformMatrix4fv(modelMatrixLocation, false, matrix44buffer)
+		loadModel()
 
 		glUseProgram(0)
 
-		// setupProjectionMatrix(width, height)
-		/*glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity()
-		glTranslatef(0f, -5.0f, -40f)
-		glRotatef(rot, 0.0f, 1.0f, 0.0f)
-		glColor3f(0.5f, 0.5f, 1.0f) */
-
 		rot = (rot + 0.5f) % 360
 
-		chunks(4).render(pId)
-
-		// chunks(4).buffers.
-
-		//for (x <- 0 to 2; z <- 0 to 2)
-		//	chunks(x*3 + z).render(-16f + 16f*x, -16f + 16f*z)
+		for (x <- 0 to 2; z <- 0 to 2) {
+			glUseProgram(pId)
+			modelMatrix.setIdentity()
+			modelMatrix.translate(new Vector3f(-16f + 16f*x, 0f, -16f + 16f*z));
+			loadModel()
+			glUseProgram(0)
+			chunks(x*3 + z).render(pId)
+		}
 	}
 }

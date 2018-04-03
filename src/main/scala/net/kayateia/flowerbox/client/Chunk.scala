@@ -54,6 +54,7 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 					 front: Boolean = true, back: Boolean = true) {
 		def isEmpty = !top && !left && !right && !bottom && !front && !back
 
+		// Voxel size
 		def size = 0.5f
 
 		// Each vertex will take 5 floats in the array.
