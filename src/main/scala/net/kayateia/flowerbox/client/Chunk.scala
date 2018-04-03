@@ -274,6 +274,9 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 	}
 
 	def render(pId: Int) {
+		if (vaoId == 0)
+			createVertexArrays()
+
 		glUseProgram(pId)
 
 		// Bind the texture

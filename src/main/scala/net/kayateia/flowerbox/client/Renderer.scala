@@ -5,6 +5,9 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL20._
 import org.lwjgl.util.vector._
 
+import scala.collection.mutable
+import scala.concurrent.Future
+
 object Renderer {
 	private val chunkW = 9
 	private val chunkH = 9
@@ -12,6 +15,8 @@ object Renderer {
 
 	private var width: Int = 0
 	private var height: Int = 0
+
+	private val chunkRenderQueue = new mutable.Queue[Chunk]
 
 	def setup(w: Int, h: Int) {
 		width = w
@@ -21,11 +26,20 @@ object Renderer {
 		setupMatrices()
 		setupShaders()
 
-		for (x <- 0 until chunkW; z <- 0 until chunkH) {
-			chunks(x * chunkW + z) = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
-			chunks(x * chunkW + z).setup()
-			chunks(x * chunkW + z).createVertexArrays()
-		}
+		new Thread(() => {
+			println("Beginning terrain generation")
+			for (x <- 0 until chunkW; z <- 0 until chunkH) {
+				val newChunk = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
+				newChunk.setup()
+				newChunk.buffers
+				println(s"done with ${x}, ${z}")
+				chunkRenderQueue.synchronized {
+					chunkRenderQueue.enqueue(newChunk)
+				}
+				chunks(x * chunkW + z) = newChunk
+			}
+			println("terrain generation done")
+		}).start()
 	}
 
 	private val PI = 3.14159265358979323846
@@ -138,13 +152,25 @@ object Renderer {
 
 		rot = (rot + 0.5f) % 360
 
+		var chunkToRender: Chunk = null
+		chunkRenderQueue.synchronized {
+			if (!chunkRenderQueue.isEmpty) {
+				chunkToRender = chunkRenderQueue.dequeue()
+			}
+		}
+		if (chunkToRender != null)
+			chunkToRender.createVertexArrays()
+
 		for (x <- 0 until chunkW; z <- 0 until chunkH) {
-			glUseProgram(pId)
-			modelMatrix.setIdentity()
-			modelMatrix.translate(new Vector3f(-16f*chunkW/2 + 16f*x, 0f, -16f*chunkH/2 + 16f*z));
-			loadModel()
-			glUseProgram(0)
-			chunks(x*chunkW + z).render(pId)
+			val chunk = chunks(x * chunkW + z)
+			if (chunk != null && chunk.vaoId > 0) {
+				glUseProgram(pId)
+				modelMatrix.setIdentity()
+				modelMatrix.translate(new Vector3f(-16f*chunkW/2 + 16f*x, 0f, -16f*chunkH/2 + 16f*z));
+				loadModel()
+				glUseProgram(0)
+				chunks(x*chunkW + z).render(pId)
+			}
 		}
 	}
 }
