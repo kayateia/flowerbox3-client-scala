@@ -6,7 +6,9 @@ import org.lwjgl.opengl.GL20._
 import org.lwjgl.util.vector._
 
 object Renderer {
-	private val chunks = new Array[Chunk](9)
+	private val chunkW = 9
+	private val chunkH = 9
+	private val chunks = new Array[Chunk](chunkW * chunkH)
 
 	private var width: Int = 0
 	private var height: Int = 0
@@ -19,10 +21,10 @@ object Renderer {
 		setupMatrices()
 		setupShaders()
 
-		for (x <- 0 to 2; z <- 0 to 2) {
-			chunks(x * 3 + z) = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
-			chunks(x * 3 + z).setup()
-			chunks(x * 3 + z).createVertexArrays()
+		for (x <- 0 until chunkW; z <- 0 until chunkH) {
+			chunks(x * chunkW + z) = new Chunk(x + Chunk.xSize, z + Chunk.zSize)
+			chunks(x * chunkW + z).setup()
+			chunks(x * chunkW + z).createVertexArrays()
 		}
 	}
 
@@ -39,7 +41,7 @@ object Renderer {
 		val fieldOfView = 60f
 		val aspectRatio = width.asInstanceOf[Float] / height.asInstanceOf[Float]
 		val near_plane = 0.1f
-		val far_plane = 100f
+		val far_plane = 200f
 
 		val y_scale = this.coTangent(this.degreesToRadians(fieldOfView / 2f))
 		val x_scale = y_scale / aspectRatio
@@ -114,6 +116,7 @@ object Renderer {
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 		viewMatrix.setIdentity()
+		viewMatrix.rotate(degreesToRadians(20f), new Vector3f(1f, 0f, 0f))
 		viewMatrix.translate(new Vector3f(0f, -10f, -50f))
 		viewMatrix.rotate(degreesToRadians(rot), new Vector3f(0f, 1, 0f))
 		viewMatrix.translate(new Vector3f(-16f/2, 0f, -16f/2))
@@ -135,13 +138,13 @@ object Renderer {
 
 		rot = (rot + 0.5f) % 360
 
-		for (x <- 0 to 2; z <- 0 to 2) {
+		for (x <- 0 until chunkW; z <- 0 until chunkH) {
 			glUseProgram(pId)
 			modelMatrix.setIdentity()
-			modelMatrix.translate(new Vector3f(-16f + 16f*x, 0f, -16f + 16f*z));
+			modelMatrix.translate(new Vector3f(-16f*chunkW/2 + 16f*x, 0f, -16f*chunkH/2 + 16f*z));
 			loadModel()
 			glUseProgram(0)
-			chunks(x*3 + z).render(pId)
+			chunks(x*chunkW + z).render(pId)
 		}
 	}
 }

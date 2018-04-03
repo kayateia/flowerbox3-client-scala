@@ -11,8 +11,8 @@ import org.lwjgl.opengl.GL20._
 import scala.collection.mutable.ArrayBuffer
 
 object Chunk {
-	val xSize = 0.25f
-	val zSize = 0.25f
+	val xSize = 0.75f
+	val zSize = 0.75f
 }
 
 class Chunk(val globalX: Float, val globalZ: Float) {
@@ -33,13 +33,13 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		val xMin = globalX * Chunk.xSize
 		val zMin = globalZ * Chunk.zSize
 		val perlin = new Perlin()
-		perlin.setOctaveCount(3)
+		perlin.setOctaveCount(4)
 		perlin.setPersistence(0.3)
 
 		for (x <- 0 until 16; z <- 0 until 16) {
 			// val height = Math.floor(Math.random() * 15).asInstanceOf[Int]
-			val height = Math.floor(13f * perlin.getValue(xMin + Chunk.xSize*(x / 16f), 0, zMin + Chunk.zSize*(z / 16f))).asInstanceOf[Int]
-			val heightMinMaxed = Math.max(Math.min(height, 13), 1)
+			val height = Math.floor(14f * perlin.getValue(xMin + Chunk.xSize*(x / 16f), 0, zMin + Chunk.zSize*(z / 16f))).asInstanceOf[Int]
+			val heightMinMaxed = Math.max(Math.min(height, 14), 1)
 			for (y <- 0 until heightMinMaxed)
 				cubeMap(coord(x, y, z)) = 2
 			cubeMap(coord(x, heightMinMaxed, z)) = 1
@@ -55,7 +55,7 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		def isEmpty = !top && !left && !right && !bottom && !front && !back
 
 		// Voxel size
-		def size = 0.5f
+		def size = 0.51f
 
 		// Each vertex will take 5 floats in the array.
 		def toBuffer(dataArray: ArrayBuffer[Float], elementArray: ArrayBuffer[Int]) {
