@@ -15,7 +15,7 @@ object Renderer {
 		width = w
 		height = h
 
-		Textures.loadAll()
+		println("Atlas ID is " + Textures.atlas.glTextureId)
 		setupMatrices()
 		setupShaders()
 

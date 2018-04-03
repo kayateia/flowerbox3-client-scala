@@ -58,133 +58,136 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		def size = 0.5f
 
 		// Each vertex will take 5 floats in the array.
-		def toBuffer(dataArray: ArrayBuffer[Float], elementArray: ArrayBuffer[Int], textureArray: ArrayBuffer[Int]) {
+		def toBuffer(dataArray: ArrayBuffer[Float], elementArray: ArrayBuffer[Int]) {
+			val dirt = Textures.atlas.coordsOf(Textures.dirt)
+			val grassTop = Textures.atlas.coordsOf(Textures.grassTop)
+			val grassSide = Textures.atlas.coordsOf(Textures.grassSide)
 			if (top) {
+				val txr = {
+					blockType match {
+						case 1 => grassTop
+						case 2 => dirt
+					}
+				}
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x+size, y+size, z-size,
-					1f, 0f,
+					txr.s2, txr.t1,
 					x-size, y+size, z-size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x-size, y+size, z+size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x+size, y+size, z+size,
-					1f, 1f
+					txr.s2, txr.t2
 				)
-				textureArray += {
-					blockType match {
-						case 1 => Textures.grassTop
-						case 2 => Textures.dirt
-					}
-				}
 			}
 			if (bottom) {
+				val txr = dirt
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x+size, y-size, z+size,
-					1f, 0f,
+					txr.s2, txr.t1,
 					x-size, y-size, z+size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x-size, y-size, z-size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x+size, y-size, z-size,
-					1f, 1f
+					txr.s2, txr.t2
 				)
-				textureArray += Textures.dirt
 			}
 			if (back) {
+				val txr = {
+					blockType match {
+						case 1 => grassSide
+						case 2 => dirt
+					}
+				}
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x+size, y+size, z+size,
-					1f, 0f,
+					txr.s2, txr.t1,
 					x-size, y+size, z+size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x-size, y-size, z+size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x+size, y-size, z+size,
-					1f, 1f
+					txr.s2, txr.t2
 				)
-				textureArray += {
-					blockType match {
-						case 1 => Textures.grassSide
-						case 2 => Textures.dirt
-					}
-				}
 			}
 			if (front) {
+				val txr = {
+					blockType match {
+						case 1 => grassSide
+						case 2 => dirt
+					}
+				}
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x+size, y-size, z-size,
-					1f, 1f,
+					txr.s2, txr.t2,
 					x-size, y-size, z-size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x-size, y+size, z-size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x+size, y+size, z-size,
-					1f, 0f
+					txr.s2, txr.t1
 				)
-				textureArray += {
-					blockType match {
-						case 1 => Textures.grassSide
-						case 2 => Textures.dirt
-					}
-				}
 			}
 			if (left) {
+				val txr = {
+					blockType match {
+						case 1 => grassSide
+						case 2 => dirt
+					}
+				}
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x-size, y+size, z+size,
-					1f, 0f,
+					txr.s2, txr.t1,
 					x-size, y+size, z-size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x-size, y-size, z-size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x-size, y-size, z+size,
-					1f, 1f
+					txr.s2, txr.t2
 				)
-				textureArray += {
-					blockType match {
-						case 1 => Textures.grassSide
-						case 2 => Textures.dirt
-					}
-				}
 			}
 			if (right) {
+				val txr = {
+					blockType match {
+						case 1 => grassSide
+						case 2 => dirt
+					}
+				}
 				val base = dataArray.length / 5
 				elementArray ++= List (
 					base+0, base+1, base+2, base+2, base+3, base+0
 				)
 				dataArray ++= List (
 					x+size, y+size, z-size,
-					1f, 0f,
+					txr.s2, txr.t1,
 					x+size, y+size, z+size,
-					0f, 0f,
+					txr.s1, txr.t1,
 					x+size, y-size, z+size,
-					0f, 1f,
+					txr.s1, txr.t2,
 					x-size, y-size, z-size,
-					1f, 1f
+					txr.s2, txr.t2
 				)
-				textureArray += {
-					blockType match {
-						case 1 => Textures.grassSide
-						case 2 => Textures.dirt
-					}
-				}
 			}
 		}
 	}
@@ -219,17 +222,16 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		displayList
 	}
 
-	case class Buffers(vertsAndSt: ArrayBuffer[Float], elems: ArrayBuffer[Int], txrs: ArrayBuffer[Int])
+	case class Buffers(vertsAndSt: ArrayBuffer[Float], elems: ArrayBuffer[Int])
 
 	private def genBuffers(voxels: ArrayBuffer[Voxel]): Buffers = {
 		val vas = new ArrayBuffer[Float]
 		val es = new ArrayBuffer[Int]
-		val ts = new ArrayBuffer[Int]
 		for (v <- voxels) {
-			v.toBuffer(vas, es, ts)
+			v.toBuffer(vas, es)
 		}
 
-		Buffers(vas, es, ts)
+		Buffers(vas, es)
 	}
 
 	var vaoId: Int = 0
@@ -276,7 +278,7 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 
 		// Bind the texture
 		glActiveTexture(GL_TEXTURE0)
-		glBindTexture(GL_TEXTURE_2D, Textures.dirt)
+		glBindTexture(GL_TEXTURE_2D, Textures.atlas.glTextureId)
 
 		// Bind to the VAO that has all the information about the vertices
 		glBindVertexArray(vaoId)
