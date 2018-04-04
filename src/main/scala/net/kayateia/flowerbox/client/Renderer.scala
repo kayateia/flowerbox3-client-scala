@@ -6,26 +6,32 @@ import org.lwjgl.opengl.GL20._
 import org.lwjgl.util.vector._
 
 import scala.collection.mutable
-import scala.concurrent.Future
 
 object Renderer {
-	private val chunkW = 9
-	private val chunkH = 9
+	// How many chunks we'll render in our small world.
+	private val chunkW = 15
+	private val chunkH = 15
 	private val chunks = new Array[Chunk](chunkW * chunkH)
 
+	// The width/height of the viewport.
 	private var width: Int = 0
 	private var height: Int = 0
 
+	// Queue of chunks that remain to be turned into VAO/VBOs.
 	private val chunkRenderQueue = new mutable.Queue[Chunk]
 
+	// Called once, in the render loop.
 	def setup(w: Int, h: Int) {
 		width = w
 		height = h
 
+		// Pull this once during the setup to make sure it gets loaded.
 		println("Atlas ID is " + Textures.atlas.glTextureId)
+
 		setupMatrices()
 		setupShaders()
 
+		// Begin background terrain generation.
 		new Thread(() => {
 			println("Beginning terrain generation")
 			for (x <- 0 until chunkW; z <- 0 until chunkH) {
@@ -75,6 +81,7 @@ object Renderer {
 	var modelMatrixLocation: Int = 0
 	var lightColorLocation: Int = 0
 	var lightPositionLocation: Int = 0
+	var ambientLocation: Int = 0
 
 	def setupShaders() {
 		// Create a new shader program that links both shaders
@@ -112,11 +119,13 @@ object Renderer {
 		// Get other parameter locations.
 		lightColorLocation = glGetUniformLocation(pId, "lightColor")
 		lightPositionLocation = glGetUniformLocation(pId, "lightPos")
+		ambientLocation = glGetUniformLocation(pId, "ambientStrength")
 
 		// Set some default lighting.
 		glUseProgram(pId)
-		glUniform3f(lightColorLocation, 1f, 1f, 1f)
-		glUniform3f(lightPositionLocation, 15f, 15f, 15f)
+		glUniform3f(lightColorLocation, 0.5f, 0.5f, 0.5f)
+		glUniform3f(lightPositionLocation, 15f, 30f, 15f)
+		glUniform1f(ambientLocation, 0.7f)
 		glUseProgram(0)
 
 		// this.exitOnGLError("setupShaders");
@@ -128,15 +137,22 @@ object Renderer {
 		glUniformMatrix4fv(modelMatrixLocation, false, matrix44buffer)
 	}
 
-	private var rot = 0.0f;
+	// Camera rotation and delta rotation (for movement).
+	private var rot = 0.0f
+	private var drot = 0.0f
+
+	def setRotate(d: Float) {
+		drot = d
+	}
 
 	def render() {
 		glViewport(0, 0, width, height)
-		glClearColor(133f / 255f, 225f / 255f, 1f, 0f)
+		glClearColor(183f / 255f, 235f / 255f, 1f, 0f)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		glEnable(GL_DEPTH_TEST)
 		glDepthFunc(GL_LESS)
+		glEnable(GL_CULL_FACE)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 		//glEnable(GL_BLEND)
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -162,7 +178,7 @@ object Renderer {
 
 		glUseProgram(0)
 
-		rot = (rot + 0.5f) % 360
+		rot = (rot + drot) % 360
 
 		var chunkToRender: Chunk = null
 		chunkRenderQueue.synchronized {

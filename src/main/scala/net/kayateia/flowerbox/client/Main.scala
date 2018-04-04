@@ -26,7 +26,6 @@ import org.lwjgl.system.MemoryUtil._
 
 object Main extends App {
 	import CallbackHelpers._
-	import Renderer.{render, setup}
 
 	private val WIDTH  = 800
 	private val HEIGHT = 600
@@ -82,10 +81,10 @@ object Main extends App {
 	private def loop(window: Long) {
 		GL.createCapabilities()
 
-		setup(WIDTH, HEIGHT)
+		Renderer.setup(WIDTH, HEIGHT)
 
 		while (!glfwWindowShouldClose(window)) {
-			render()
+			Renderer.render()
 			glfwSwapBuffers(window)
 			glfwPollEvents()
 		}
@@ -94,6 +93,18 @@ object Main extends App {
 	private def keyHandler (window: Long, key: Int, scanCode: Int, action: Int, mods: Int): Unit = {
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
 			glfwSetWindowShouldClose(window, true)
+		if (key == GLFW_KEY_LEFT) {
+			if (action == GLFW_PRESS)
+				Renderer.setRotate(-1f)
+			else
+				Renderer.setRotate(0f)
+		}
+		if (key == GLFW_KEY_RIGHT) {
+			if (action == GLFW_PRESS)
+				Renderer.setRotate(1f)
+			else
+				Renderer.setRotate(0f)
+		}
 	}
 
 	run()

@@ -11,8 +11,13 @@ import org.lwjgl.opengl.GL20._
 import scala.collection.mutable.ArrayBuffer
 
 object Chunk {
+	// The size of one chunk in Perlin coordinates.
 	val xSize = 0.75f
 	val zSize = 0.75f
+
+	// These are other Perlin noise knobs you can tweak for terrain variation.
+	val octaveCount = 4
+	val persistence = 0.3f
 }
 
 class Chunk(val globalX: Float, val globalZ: Float) {
@@ -23,12 +28,12 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 	lazy val displayList = genDL(genLand())
 	lazy val buffers = genBuffers(displayList)
 
-	val grass = 1
-	val dirt = 2
-	val snow = 3
-
 	// Convert from x,y,z to cubeMap index.
 	private def coord(x: Int, y: Int, z: Int) = z*16*16 + y*16 + x
+
+	final val grass: Int = 1
+	final val dirt: Int = 2
+	final val snow: Int = 3
 
 	// Generates the cube map.
 	private def genLand(): Array[Int] = {
@@ -37,8 +42,8 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 		val xMin = globalX * Chunk.xSize
 		val zMin = globalZ * Chunk.zSize
 		val perlin = new Perlin()
-		perlin.setOctaveCount(4)
-		perlin.setPersistence(0.3)
+		perlin.setOctaveCount(Chunk.octaveCount)
+		perlin.setPersistence(Chunk.persistence)
 
 		for (x <- 0 until 16; z <- 0 until 16) {
 			// val height = Math.floor(Math.random() * 15).asInstanceOf[Int]
@@ -219,7 +224,7 @@ class Chunk(val globalX: Float, val globalZ: Float) {
 					x+size, y-size, z+size,
 					1f, 0f, 0f,
 					txr.s1, txr.t2,
-					x-size, y-size, z-size,
+					x+size, y-size, z-size,
 					1f, 0f, 0f,
 					txr.s2, txr.t2
 				)

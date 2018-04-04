@@ -1,5 +1,6 @@
 #version 150 core
 
+uniform float ambientStrength;
 uniform sampler2D texture_diffuse;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
@@ -12,7 +13,6 @@ out vec4 out_Color;
 
 void main(void) {
 	// ambient
-	float ambientStrength = 0.4;
 	vec3 ambient = ambientStrength * lightColor;
 
 	// diffuse
