@@ -4,6 +4,9 @@ This is the client for Flowerbox 3, aka the voxel version. Running this requires
 a working Scala environment (sbt), a supported LWJGL platform, and a few
 textures that you currently have to supply for yourself.
 
+THIS IS NOW DEPRECATED IN FAVOR OF THE KOTLIN REPO. Please see flowerbox3-client on
+this GitHub account for everything moving forward.
+
 This is licensed under the MIT license.
 
 ## License
